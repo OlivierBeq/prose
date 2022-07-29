@@ -1,15 +1,18 @@
 from __future__ import print_function,division
 
-import numpy as np
+import os
 from pathlib import Path
 
+import numpy as np
+import requests
+from tqdm.auto import tqdm
 import torch
 import torch.utils.data
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 def get_project_root() -> Path:
-    return Path(__file__).parent.parent
+    return Path(__file__).parent
 
 
 def pack_sequences(X, order=None):
@@ -133,3 +136,36 @@ class MultinomialResample:
         #print(x.size(), x.dtype)
         p = self.p[x] # get distribution for each x
         return torch.multinomial(p, 1).view(-1) # sample from distribution
+
+
+def donwload_weights(model, path, progress: bool = True) -> None:
+    """Download the model weights
+
+    :param model: Name of the model {prose_dlm_3x1024, prose_mt_3x1024}
+    :param path: Path where weight files are saved
+    :param progress: Should a progress bar be displayed
+    """
+    links = {"prose_dlm_3x1024": "https://drive.google.com/uc?id=1c-eCXBs52jaW4a-ciAzcMT7sPCTfk4OG&confirm=t",
+             "prose_mt_3x1024": "https://drive.google.com/uc?id=1BGZ3HPI66qaVqoEKAwLwuz5TQEuS_Cwc&confirm=t"}
+    if not model in links.keys():
+        raise ValueError(f'model must be one of {", ".join(links.keys())}')
+    if not os.path.isdir(path):
+        os.makedirs(path, exist_ok=True)
+    fpath = os.path.join(path, model + '.sav')
+    with open(fpath, 'wb') as oh:
+        session = requests.session()
+        url = links[model]
+        res = session.get(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                                                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                                      "Chrome/39.0.2171.95 "
+                                                      "Safari/537.36"},
+                          stream=True, verify=True)
+        total = int(res.headers.get("Content-Length"))
+        if progress:
+            pbar = tqdm(total=total, unit='B', unit_scale=True,
+                        desc='Downloading model')
+        for chunk in res.iter_content(chunk_size=1048576): # 1MB
+            oh.write(chunk)
+            if progress:
+                pbar.update(len(chunk))
+        pbar.close()

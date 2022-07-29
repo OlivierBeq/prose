@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.nn.utils.rnn import PackedSequence
 
 import os
-from prose.utils import get_project_root
+from ..utils import get_project_root, donwload_weights
 
 
 class SkipLSTM(nn.Module):
@@ -38,7 +38,8 @@ class SkipLSTM(nn.Module):
         if path is None or path == 'prose_dlm':
             root = get_project_root()
             path = os.path.join(root, 'saved_models', 'prose_dlm_3x1024.sav')
-
+            if not os.path.isfile(path):
+                donwload_weights('prose_dlm_3x1024', os.path.join(root, 'saved_models'))
         model = SkipLSTM(21, 21, 1024, 3)
         state_dict = torch.load(path, map_location=torch.device('cpu'))
         model.load_state_dict(state_dict)

@@ -15,9 +15,9 @@ import pandas as pd
 
 import torch
 
-from prose.alphabets import Uniprot21
-import prose.scop as scop
-import prose.fasta as fasta
+from .alphabets import Uniprot21
+from .scop import parse_astral
+from .fasta import parse
 
 
 class SCOPeDataset:
@@ -38,7 +38,7 @@ class SCOPeDataset:
 
     def load(self, path, alphabet):
         with open(path, 'rb') as f:
-            names, structs, sequences = scop.parse_astral(f, encoder=alphabet)    
+            names, structs, sequences = parse_astral(f, encoder=alphabet)
         # make sure no sequences of length 0 are included
         names_filtered = []
         structs_filtered = []
@@ -120,7 +120,7 @@ class ContactMapDataset:
         print('# loading contact maps:', root, 'for sequences:', path, file=sys.stderr)
 
         with open(path, 'rb') as f:
-            names,sequences = fasta.parse(f)
+            names,sequences = parse(f)
 
         # find all of the contact maps and index them by protein identifier
         cmap_paths = glob.glob(root + os.sep + '*' + os.sep + '*.png')

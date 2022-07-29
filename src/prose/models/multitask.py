@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 import os
-from prose.utils import get_project_root
+from ..utils import get_project_root, donwload_weights
 
 
 class ProSEMT(nn.Module):
@@ -20,8 +20,10 @@ class ProSEMT(nn.Module):
         if path is None or path == 'prose_mt':
             root = get_project_root()
             path = os.path.join(root, 'saved_models', 'prose_mt_3x1024.sav')
+            if not os.path.isfile(path):
+                donwload_weights('prose_mt_3x1024', os.path.join(root, 'saved_models'))
 
-        from prose.models.lstm import SkipLSTM
+        from .lstm import SkipLSTM
         encoder = SkipLSTM(21, 21, 1024, 3)
         encoder.cloze = encoder.proj
 

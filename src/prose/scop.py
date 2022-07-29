@@ -1,7 +1,7 @@
 from __future__ import print_function,division
 
 import numpy as np
-import prose.fasta as fasta
+from .fasta import parse_stream
 
 class NullEncoder:
     def encode(self, x):
@@ -29,7 +29,7 @@ def parse_astral(f, encoder=NullEncoder(), encode_struct=True):
     names = []
     structs = []
     sequences = []
-    for name,sequence in fasta.parse_stream(f):
+    for name,sequence in parse_stream(f):
         x = encoder.encode(sequence.upper())
         name, struct = parse_astral_name(name, encode_struct=encode_struct)
         names.append(name)
